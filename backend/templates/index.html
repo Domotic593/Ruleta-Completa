@@ -1,0 +1,36 @@
+<!-- backend/templates/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruleta de Premios Interactiva</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>🎯 Ruleta de Premios</h1>
+            <div class="user-info">
+                <div class="points-display">
+                    <span id="user-points">100</span> puntos
+                </div>
+                <a href="http://localhost:3000" class="admin-link" target="_blank">Panel Admin</a>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="wheel-container-wrapper">
+                <div id="wheel-container">
+                    <div id="fortune-wheel" class="wheel"></div>
+                    <div class="spinner"></div>
+                </div>
+                <button id="spin-button" class="spin-btn">GIRAR RULETA</button>
+                <div id="result" class="result-display"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='rulet.js') }}"></script>
+</body>
+</html>
