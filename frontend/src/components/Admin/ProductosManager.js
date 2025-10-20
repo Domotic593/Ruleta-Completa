@@ -1,22 +1,21 @@
 // frontend/src/components/ProductosManager.js
 // frontend/src/components/ProductosManager.tsx
 import React, { useState } from 'react';
-import { Producto } from '../../types';
+import { Producto } from '../types';
 
 interface ProductosManagerProps {
   productos: Producto[];
   onUpdate: () => void;
 }
 
-interface FormData {
-  nombre: string;
+interface FormData {  nombre: string;
   tipo: 'prize' | 'penalty' | 'bonus' | 'wildcard';
   puntos: number;
   stock: number;
   probabilidad: number;
   color: string;
 }
-
+ 
 const ProductosManager: React.FC<ProductosManagerProps> = ({ productos, onUpdate }) => {
   const [formData, setFormData] = useState<FormData>({
     nombre: '',
