@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
+from models import db, Producto, Usuario, PremioObtenido  # ← IMPORTAR DESDE MODELS
 from datetime import datetime
 import random
 import os
+
 
 # Crear aplicación Flask
 app = Flask(__name__)
@@ -14,44 +15,9 @@ app.config['SECRET_KEY'] = 'clave-secreta-ruleta-2024'
 # Configurar CORS - IMPORTANTE para React
 CORS(app)
 
-# Inicializar base de datos
-db = SQLAlchemy(app)
+# Inicializar base de datos con la app
+db.init_app(app)
 
-# MODELOS
-class Producto(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False)
-    tipo = db.Column(db.String(20), nullable=False)
-    puntos = db.Column(db.Integer, default=0)
-    stock = db.Column(db.Integer, default=1)
-    probabilidad = db.Column(db.Float, default=1.0)
-    activo = db.Column(db.Boolean, default=True)
-    color = db.Column(db.String(7), default='#4CAF50')
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'nombre': self.nombre,
-            'tipo': self.tipo,
-            'puntos': self.puntos,
-            'stock': self.stock,
-            'probabilidad': self.probabilidad,
-            'activo': self.activo,
-            'color': self.color
-        }
-
-class Usuario(db.Model):
-    id = db.Column(db.String(50), primary_key=True)
-    puntos = db.Column(db.Integer, default=100)
-    giros_realizados = db.Column(db.Integer, default=0)
-    ultimo_giro = db.Column(db.DateTime)
-
-class PremioObtenido(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    usuario_id = db.Column(db.String(50), nullable=False)
-    producto_id = db.Column(db.Integer, nullable=False)
-    fecha_obtencion = db.Column(db.DateTime, default=datetime.utcnow)
-    canjeado = db.Column(db.Boolean, default=False)
 
 # RUTAS DE LA API
 @app.route('/api/test')
