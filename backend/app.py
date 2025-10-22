@@ -1,25 +1,42 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from models import db, Producto, Usuario, PremioObtenido  # ← IMPORTAR DESDE MODELS
+from models import db, Producto, Usuario, PremioObtenido
 from datetime import datetime
 import random
 import os
 
-
 # Crear aplicación Flask
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ruleta.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'clave-secreta-ruleta-2024'
 
-# Configurar CORS - IMPORTANTE para React
+# Configuración para producción
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///ruleta.db')
+if app.config['SQLALCHEMY_DATABASE_URI'].startswith('postgres://'):
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace('postgres://', 'postgresql://', 1)
+    
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave-secreta-ruleta-2024')
+
+# Configurar CORS - IMPORTANTE para producción
 CORS(app)
 
 # Inicializar base de datos con la app
 db.init_app(app)
 
-
 # RUTAS DE LA API
+@app.route('/')
+def home():
+    return jsonify({
+        "message": "🚀 Backend de Ruleta funcionando!",
+        "status": "success", 
+        "endpoints": {
+            "test": "/api/test",
+            "ruleta_items": "/api/ruleta/items", 
+            "girar_ruleta": "/api/ruleta/girar (POST)",
+            "admin_productos": "/api/admin/productos",
+            "estadisticas": "/api/admin/estadisticas"
+        }
+    })
+
 @app.route('/api/test')
 def test_api():
     return jsonify({"status": "success", "message": "✅ API funcionando correctamente!"})
@@ -173,11 +190,14 @@ def init_db():
             # Agregar productos de ejemplo si no existen
             if Producto.query.count() == 0:
                 productos_ejemplo = [
-                    Producto(nombre="Premio Mayor", tipo="prize", puntos=100, probabilidad=0.05, color="#FFD700"),
-                    Producto(nombre="Viaje a la Playa", tipo="prize", puntos=80, probabilidad=0.08, color="#4CAF50"),
-                    Producto(nombre="Tarjeta Regalo $50", tipo="prize", puntos=60, probabilidad=0.1, color="#2196F3"),
-                    Producto(nombre="Pierdes Turno", tipo="penalty", puntos=-10, probabilidad=0.15, color="#F44336"),
-                    Producto(nombre="Giro Extra", tipo="bonus", puntos=0, probabilidad=0.07, color="#9C27B0"),
+                    Producto(nombre="🎁 Premio Mayor", tipo="prize", puntos=100, probabilidad=0.05, color="#FFD700", stock=10),
+                    Producto(nombre="🏖️ Viaje a la Playa", tipo="prize", puntos=80, probabilidad=0.08, color="#4CAF50", stock=5),
+                    Producto(nombre="💳 Tarjeta Regalo $50", tipo="prize", puntos=60, probabilidad=0.1, color="#2196F3", stock=8),
+                    Producto(nombre="⏸️ Pierdes Turno", tipo="penalty", puntos=-10, probabilidad=0.15, color="#F44336", stock=999),
+                    Producto(nombre="🔄 Giro Extra", tipo="bonus", puntos=0, probabilidad=0.07, color="#9C27B0", stock=3),
+                    Producto(nombre="✨ Bonus Sorpresa", tipo="bonus", puntos=20, probabilidad=0.1, color="#00BCD4", stock=6),
+                    Producto(nombre="🎯 Tiro Perfecto", tipo="prize", puntos=50, probabilidad=0.12, color="#E91E63", stock=4),
+                    Producto(nombre="🎴 Comodín", tipo="wildcard", puntos=30, probabilidad=0.08, color="#FF9800", stock=2),
                 ]
                 
                 for producto in productos_ejemplo:
@@ -191,11 +211,25 @@ def init_db():
         except Exception as e:
             print(f"❌ Error inicializando base de datos: {e}")
 
+# Manejo de errores
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'error': 'Endpoint no encontrado'}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({'error': 'Error interno del servidor'}), 500
+
 if __name__ == '__main__':
     print("🚀 Iniciando servidor Flask...")
     init_db()
-    print("📍 Servidor ejecutándose en: http://localhost:5000")
+    
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    
+    print(f"📍 Servidor ejecutándose en puerto: {port}")
     print("📡 Endpoints disponibles:")
+    print("   - GET  /")
     print("   - GET  /api/test")
     print("   - GET  /api/ruleta/items")
     print("   - POST /api/ruleta/girar")
@@ -204,4 +238,4 @@ if __name__ == '__main__':
     print("   - GET  /api/admin/estadisticas")
     print("=" * 50)
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=debug, host='0.0.0.0', port=port)
